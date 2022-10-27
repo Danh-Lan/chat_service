@@ -1,6 +1,6 @@
 # TP programmation reseaux - service du chat
 
-# Compilation : 
+# Compilation
 Tapez $make$ dans le répertoire principal
 
 
