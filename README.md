@@ -10,3 +10,5 @@ Commande | Parametre | Fonctionnement
 /create | [groupe] [nom(s)] | créer un groupe
 
 
+Suppose que chaque client est membre au maximum de 1 groupe
+TO DO : chaque client peut être membre de plusieurs groupes
