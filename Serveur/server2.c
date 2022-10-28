@@ -124,9 +124,44 @@ static void app(void)
                   write_history(client, buffer, 1);
                }
                else
-               {
+               {  
+              
+                char* commande;
+                commande = strtok(buffer, " ");
+                if (strcmp(commande, "/send") == 0) {
+                    // commande is useless here
+                    char *receiver_name, *message;
+                    commande = strtok(NULL, " ");
+                    receiver_name = commande;
+                    commande = strtok(NULL, "\n");
+                    message = commande;
+                    send_message_to_one_client(clients, client, actual, receiver_name, message, 0);
+                }
+                else if (strcmp(commande,"/create")==0){
+                    char *groupe;
+                    char **membre;
+                    int SIZE = 10;
+                    membre = (char**) malloc(SIZE * sizeof(char*));
+                    int x = 0;
+                    for (x = 0; x < SIZE; x++) {
+                        membre[x] = (char*) malloc(BUF_SIZE * sizeof(char)); 
+                    }
+                    int count_membre = 0;
+                    commande = strtok(NULL, " ");
+                    groupe = commande;
+                    
+                    while(commande!=NULL){
+                       commande = strtok(NULL, " ");
+                       membre[count_membre] = commande;
+                       count_membre++;
+                    }
+                    count_membre--;
+                    create_group(clients, actual, membre, count_membre, groupe);
+                } 
+                else {
                   send_message_to_all_clients(clients, client, actual, buffer, 0);
                   write_history(client, buffer, 0);
+                    }
                }
                break;
             }
@@ -174,8 +209,7 @@ static void send_message_to_all_clients(Client *clients, Client sender, int actu
          write_client(clients[i].sock, message);
       }
    }
-        //strncat(message, CRLF, sizeof message - strlen(message) - 1);
-        //write_history(message);
+       
 }
 
 static int init_connection(void)
@@ -271,22 +305,45 @@ static void send_history(Client client) {
             write_client(client.sock, buf);
         }
     }
-
-    /*if (fichier != NULL)
-    {
-        // Boucle de lecture des caractères un à un
-        do
-        {
-            caractereActuel = fgetc(fichier); // On lit le caractère
-            write_client(clients[indexClient].sock, caractereActuel);
-            //printf("%c", caractereActuel); // On l'affiche
-        } while (caractereActuel != EOF); // On continue tant que fgetc n'a pas retourné EOF (fin de fichier)
- 
-        fclose(fichier);
-    }*/
- 
 }
+static void send_message_to_one_client(Client *clients, Client sender, int actual, const char* receiver_name, const char *buffer, char from_server){
+    int i = 0;
+    char message[BUF_SIZE];
+    message[0] = 0;
+    int found = 0;
+    for(i = 0; i < actual; i++)
+   {
+      if(strcmp(clients[i].name, receiver_name)==0)
+      {
+        found = 1;
+         if(from_server == 0)
+         {
+            strncpy(message, sender.name, BUF_SIZE - 1);
+            strncat(message, " : ", sizeof message - strlen(message) - 1);
+         }
+         strncat(message, buffer, sizeof message - strlen(message) - 1);
+         write_client(clients[i].sock, message);
+      }
+   }
 
+    if (found == 0) {
+        printf("Client non trouvé..\n");
+    }
+    
+}    
+static void create_group(Client *clients, int actual,char **membre, int count_membre,const char *groupe){
+        int i=0,j=0;
+    
+    for(i = 0; i < actual; i++){
+        for(j=0;j < count_membre;j++){
+        if( strcmp(clients[i].name, membre[j])==0) {
+            
+            strcpy(clients[i].nom_groupe,groupe);
+            printf("%s",clients[i].nom_groupe);
+            }
+        }
+    } 
+}
 int main(int argc, char **argv)
 {
    init();

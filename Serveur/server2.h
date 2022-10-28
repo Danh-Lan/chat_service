@@ -47,5 +47,7 @@ static void remove_client(Client *clients, int to_remove, int *actual);
 static void clear_clients(Client *clients, int actual);
 static void write_history(Client client, const char* buffer, char from_server);
 static void send_history(Client client);
+static void send_message_to_one_client(Client *clients, Client sender, int actual, const char* receiver_name, const char *buffer, char from_server);
+static void create_group(Client *clients, int actual, char **membre, int count_membre,const char *groupe);
 
 #endif /* guard */
