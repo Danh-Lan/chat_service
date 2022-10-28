@@ -11,4 +11,5 @@ Commande | Parametre | Fonctionnement
 
 
 Suppose que chaque client est membre au maximum de 1 groupe
+
 TO DO : chaque client peut être membre de plusieurs groupes
