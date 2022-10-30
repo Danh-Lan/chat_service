@@ -9,9 +9,9 @@ AMMARI Anass
 Tapez $make$ dans le répertoire principal, Makefile va compiler les Makefile dans les sous-répertoires Serveur et Client
 
 # Execution
-Pour le serveur : /server
+Pour le serveur : ./server
 
-Pour le client : /client [adresse IP qui tourne le serveur] [pseudo]
+Pour le client : ./client [l'adresse IP qui tourne le serveur] [pseudo]
 
 # Commande
 Commande | Parametre | Fonctionnement
