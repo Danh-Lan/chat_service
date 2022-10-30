@@ -51,7 +51,6 @@ static void clear_clients(Client *clients, int actual);
 static void write_history(Client client, const char* buffer, char from_server);
 static void send_history(Client client);
 static void send_message_to_one_client(Client *clients, Client sender, int actual, const char* receiver_name, const char *buffer, char from_server);
-static void send_message_to_groupe(Client *clients, Client sender, int actual, Groupe *groupe, const char *buffer, char from_server);
 static void join_groupe(Client *clients,Client addedBy,int actual,char *added_name,Groupe *groupe);
-//static void send_message_to_groupe(Client *clients, Client sender, int actual, Groupe groupe_receiver, const char *buffer, char from_server);
+static void send_message_to_groupe(Client *clients, Client sender, int actual, Groupe groupe_receiver, const char *buffer, char from_server);
 #endif /* guard */

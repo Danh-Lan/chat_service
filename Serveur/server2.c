@@ -133,7 +133,7 @@ static void app(void)
                 char* commande;
                 commande = strtok(buffer, " ");
                 
-                if (strcmp(commande, "/send1") == 0) {
+                if (strcmp(commande, "/send") == 0) {
                     // commande is useless here
                     char *receiver_name, *message;
                     commande = strtok(NULL, " ");
@@ -202,24 +202,67 @@ static void app(void)
                         char server_message[sizeof "groupe non existe"] = "groupe non existe";
                         send_message_to_one_client(clients, clients[i], actual, clients[i].name, server_message, 1);
                     } else {
-                        join_groupe(clients,client,actual,membre_ajout,&chat);
-                        // update the group
-                        for (j = 0; j < nbGroupe; j++) {
-                            if (strcmp(groupes[j].nom, groupe_nom) == 0) {
-                                groupes[j] = chat;
+                        int membre_group = 0;
+                        for (j = 0; j < chat.nombre_membre; j++) {
+                            if (strcmp(chat.membres[j], clients[i].name) == 0) {
+                                membre_group = 1;
                                 break;
                             }
-                        }  
+                        }
+                        
+                        if (membre_group == 0) {
+                            char server_message[sizeof "Vous n'êtes pas membre de ce groupe"] = "Vous n'êtes pas membre de ce groupe";
+                            send_message_to_one_client(clients, clients[i], actual, clients[i].name, server_message, 1);
+                        } else {
+                            join_groupe(clients,client,actual,membre_ajout,&chat);
+                            // update the group
+                            for (j = 0; j < nbGroupe; j++) {
+                                if (strcmp(groupes[j].nom, groupe_nom) == 0) {
+                                    groupes[j] = chat;
+                                    break;
+                                }
+                            }  
+                        }
                     }
                 }
-                else if (strcmp(commande, "/send2") == 0) {
+                else if (strcmp(commande, "/send_group") == 0) {
                     // commande is useless here
-                    char *groupe, *message;
+                    char *groupe_nom, *message;
                     commande = strtok(NULL, " ");
-                    groupe = commande;
+                    groupe_nom = commande;
                     commande = strtok(NULL, "\n");
                     message = commande;
-                    send_message_to_groupe(clients, clients[i], actual, groupe, message, 0);
+                    
+                    Groupe groupe;
+                    int j = 0;
+                    int group_existe = 0;
+                    for (j = 0; j < nbGroupe; j++) {
+                        if (strcmp(groupes[j].nom, groupe_nom) == 0) {
+                            group_existe = 1;
+                            groupe = groupes[j];
+                            break;
+                        }
+                    }
+                    
+                    if (group_existe == 0) {
+                        char server_message[sizeof "groupe non existe"] = "groupe non existe";
+                        send_message_to_one_client(clients, clients[i], actual, clients[i].name, server_message, 1);
+                    } else {
+                        int membre_group = 0;
+                        for (j = 0; j < groupe.nombre_membre; j++) {
+                            if (strcmp(groupe.membres[j], clients[i].name) == 0) {
+                                membre_group = 1;
+                                break;
+                            }
+                        }
+                        
+                        if (membre_group == 0) {
+                            char server_message[sizeof "Vous n'êtes pas membre de ce groupe"] = "Vous n'êtes pas membre de ce groupe";
+                            send_message_to_one_client(clients, clients[i], actual, clients[i].name, server_message, 1);
+                        } else {
+                            send_message_to_groupe(clients, clients[i], actual, groupe, message, 0);
+                        }
+                    }
                 }
                 else {
                   send_message_to_all_clients(clients, client, actual, msg, 0);
@@ -391,37 +434,32 @@ static void send_message_to_one_client(Client *clients, Client sender, int actua
    }
 
     if (found == 0) {
-        printf("Client non trouvé..\n");
+        char msg [sizeof "Client non trouvé.."] = "Client non trouvé..";
+        write_client(clients[i].sock, msg);
+        //printf("Client non trouvé..\n");
     }
     
 }    
 
-static void send_message_to_groupe(Client *clients, Client sender, int actual, Groupe *groupe, const char *buffer, char from_server){
+static void send_message_to_groupe(Client *clients, Client sender, int actual, Groupe groupe, const char *buffer, char from_server){
     int i = 0, j = 0;
     char message[BUF_SIZE];
     message[0] = 0;
-    int found = 0;
     for(i = 0; i < actual; i++)
-   {
-   for(j=0;j < (*groupe).nombre_membre;j++){
-      if(strcmp(clients[i].name, (*groupe).membres[j])==0)
-      {
-        found = 1;
-         if(from_server == 0)
-         {
-            strncpy(message, sender.name, BUF_SIZE - 1);
-            strncat(message, " : ", sizeof message - strlen(message) - 1);
-         }
-         strncat(message, buffer, sizeof message - strlen(message) - 1);
-         write_client(clients[i].sock, message);
-      }
-     }
+    {
+        for(j=0;j < groupe.nombre_membre;j ++){
+            if(strcmp(clients[i].name, sender.name) != 0 && strcmp(clients[i].name, groupe.membres[j])==0)
+            {
+                if(from_server == 0)
+                {
+                    strncpy(message, sender.name, BUF_SIZE - 1);
+                    strncat(message, " : ", sizeof message - strlen(message) - 1);
+                }
+                strncat(message, buffer, sizeof message - strlen(message) - 1);
+                write_client(clients[i].sock, message);
+            }
+        }
    }
-
-    if (found == 0) {
-        printf("Client non trouvé..\n");
-    }
-    
 }   
   
 static void join_groupe(Client *clients, Client addedBy, int actual, char *added_name, Groupe *groupe){
@@ -439,13 +477,15 @@ static void join_groupe(Client *clients, Client addedBy, int actual, char *added
          groupe->nombre_membre++;
          //strncat(message, buffer, sizeof message - strlen(message) - 1);
          strncat(message,added_name, sizeof message - strlen(message) - 1);
-         //send_message_to_groupe(clients,addedBy,actual,&groupe, message , 0);
+         send_message_to_groupe(clients,addedBy,actual,*groupe, message , 0);
          break;
       }
    }
 
     if (found_membre == 0) {
-        printf("Client non trouvé..\n");
+        char msg [sizeof "Client non trouvé.."] = "Client non trouvé..";
+        write_client(clients[i].sock, msg);
+        //printf("Client non trouvé..\n");
     }
     
 } 
