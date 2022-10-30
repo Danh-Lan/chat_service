@@ -1,13 +1,17 @@
 CC = gcc
-CFLAGS = -Wall -g
 
-all: ../server
+all: client server
 
 .SUFFIXES:
 	MAKEFLAGS += -r
 
-../server: server2.o
-	@$(CC) $(CFLAGS) -o $@ $^
+.PHONY: client server
 
-%.o: %.c 
-	@$(CC) $(CFLAGS) -c -o $@ $^
+client:
+	@$(MAKE) -C Client
+
+server:
+	@$(MAKE) -C Serveur
+
+clean:
+	rm -r client server **/*.o
