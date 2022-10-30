@@ -13,6 +13,7 @@ Pour le serveur : ./server
 
 Pour le client : ./client [l'adresse IP qui tourne le serveur] [pseudo]
 
+IMPORTANT : Pour vous déconnecter en tant que client, entrez ctrl+C. Ne fermez pas le terminal directement
 # Commande
 Commande | Parametre | Fonctionnement
 ------------ | ------------- | -------------
