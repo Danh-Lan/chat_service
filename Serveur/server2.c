@@ -6,6 +6,7 @@
 
 #include "server2.h"
 #include "client2.h"
+#include "groupe.h"
 
 const char CHAT_HISTORY[sizeof "./historique/historique.txt"] = "./historique/historique.txt";
 
@@ -36,9 +37,10 @@ static void app(void)
    /* the index for the array */
    int actual = 0;
    int max = sock;
+   int nbGroupe = 0;
    /* an array for all clients */
    Client clients[MAX_CLIENTS];
-
+   Groupe groupes[MAX_GROUPES];
    fd_set rdfs;
 
    while(1)
@@ -128,6 +130,7 @@ static void app(void)
               
                 char* commande;
                 commande = strtok(buffer, " ");
+                
                 if (strcmp(commande, "/send") == 0) {
                     // commande is useless here
                     char *receiver_name, *message;
@@ -135,33 +138,59 @@ static void app(void)
                     receiver_name = commande;
                     commande = strtok(NULL, "\n");
                     message = commande;
-                    send_message_to_one_client(clients, client, actual, receiver_name, message, 0);
+                    send_message_to_one_client(clients, clients[i], actual, receiver_name, message, 0);
                 }
-                else if (strcmp(commande,"/create")==0){
-                    char *groupe;
-                    char **membre;
-                    int SIZE = 10;
-                    membre = (char**) malloc(SIZE * sizeof(char*));
-                    int x = 0;
-                    for (x = 0; x < SIZE; x++) {
-                        membre[x] = (char*) malloc(BUF_SIZE * sizeof(char)); 
-                    }
-                    int count_membre = 0;
+                else if (strcmp(commande, "/create") == 0){
+                    char *nom;
                     commande = strtok(NULL, " ");
-                    groupe = commande;
+                    nom = commande;
+                    Groupe room;
+                    strncpy(room.nom, nom, BUF_SIZE - 1);
                     
+                    // creator is part of the group
+                    strcpy(room.membres[0], clients[i].name);
+                    room.nombre_membre = 1;
+                    
+                    char* membre;
                     while(commande!=NULL){
                        commande = strtok(NULL, " ");
-                       membre[count_membre] = commande;
-                       count_membre++;
+                       if (commande==NULL) break; // VERY IMPORTANT LINE
+                       membre = commande;
+                       strcpy(room.membres[room.nombre_membre], membre);
+                       room.nombre_membre++;
                     }
-                    count_membre--;
-                    create_group(clients, actual, membre, count_membre, groupe);
-                } 
+                    
+                    int existe = 0;
+                    int j = 0;
+                    for (j = 0; j < nbGroupe; j++) {
+                        if (strcmp(groupes[j].nom, room.nom) == 0) {
+                            existe = 1;
+                            break;
+                        }
+                    }
+                    
+                    if (existe == 1) {
+                        char message[sizeof "groupe existe déjà"] = "groupe existe déjà";
+                        send_message_to_one_client(clients, clients[i], actual, clients[i].name, message, 1);
+                    } else {
+                        groupes[nbGroupe] = room;
+                        nbGroupe++;
+                    }
+                }
+                else if (strcmp(commande,"/join")==0){
+                    Groupe chat;
+                    char *membre_ajout;
+                    commande = strtok(NULL, " ");
+                    strcpy(chat.nom, commande);
+                    commande = strtok(NULL, " ");
+                    membre_ajout = commande;
+                    //join_groupe(clients, client, actual, membre_ajout, &chat);
+                }
                 else {
                   send_message_to_all_clients(clients, client, actual, buffer, 0);
                   write_history(client, buffer, 0);
-                    }
+                }
+                
                }
                break;
             }
@@ -331,22 +360,61 @@ static void send_message_to_one_client(Client *clients, Client sender, int actua
     }
     
 }    
-static void create_group(Client *clients, int actual,char **membre, int count_membre,const char *groupe){
-        int i=0,j=0;
+
+/*static void send_message_to_groupe(Client *clients, Client sender, int actual, Groupe groupe_receiver, const char *buffer, char from_server){
+    int i = 0, j = 0;
+    char message[BUF_SIZE];
+    message[0] = 0;
+    int found = 0;
+    for(i = 0; i < actual; i++)
+   {
+   for(j=0;j < (*groupe).nombre_membre;j++){
+      if(strcmp(clients[i].name, (*groupe_receiver).membres[j])==0)
+      {
+        found = 1;
+         if(from_server == 0)
+         {
+            strncpy(message, sender.name, BUF_SIZE - 1);
+            strncat(message, " : ", sizeof message - strlen(message) - 1);
+         }
+         strncat(message, buffer, sizeof message - strlen(message) - 1);
+         write_client(clients[i].sock, message);
+      }
+     }
+   }
+
+    if (found == 0) {
+        printf("Client non trouvé..\n");
+    }
     
-    for(i = 0; i < actual; i++){
-        for(j=0;j < count_membre;j++){
-        if( strcmp(clients[i].name, membre[j])==0) {
-            
-            strcpy(clients[i].nom_groupe,groupe);
-            printf("%s",clients[i].nom_groupe);
-            }
-        }
-    } 
-}
+}   */
+  
+/*static void join_groupe(Client *clients, Client added_by, int actual, const char *added_name, Groupe *groupe){
+
+   int i = 0;
+    const char *message;
+    message[] =" Nouveau membre ajouté ";
+    int found = 0;
+    for(i = 0; i < actual; i++)
+   {
+      if(strcmp(clients[i].name, added_name)==0)
+      {
+         found = 1;
+         (*groupe).nombre_membres++;
+         (*groupe).membres[nombre_membres]=added_name;
+         strncat(message, buffer, sizeof message - strlen(message) - 1);
+         send_message_to_groupe(Client *clients, Client added_by, actual,groupe, message , from_server);
+      }
+   }
+
+    if (found == 0) {
+        printf("Client non trouvé..\n");
+    }
+    
+}    */
 int main(int argc, char **argv)
 {
-   init();
+    init();
 
    app();
 
