@@ -18,5 +18,5 @@ Commande | Parametre | Fonctionnement
 ------------ | ------------- | -------------
 /send | [nom] [message] | envoyer message privé
 /create | [groupe] [nom(s)] | créer un groupe
-/join | [groupe] | rejoindre un groupe
+/join | [groupe] [nom] | faire rejoindre un client dans le groupe
 /send_group | [groupe] | envoyer un message à un groupe
